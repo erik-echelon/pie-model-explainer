@@ -513,12 +513,10 @@ def main():
                 
                 col1, col2 = st.columns(2)
                 with col1:
-                    delta_color = "inverse" if explanation.prediction > explanation.base_value else "normal"
+                    delta_color = "inverse" if explanation.prediction < explanation.base_value else "normal"
                     st.metric(
                         "Raw Model Score",
                         f"{explanation.prediction:.4f}",
-                        delta=f"{explanation.risk_delta:+.4f}",
-                        delta_color=delta_color
                     )
                 with col2:
                     st.metric("vs. Average", f"{explanation.risk_pct_change:+.1f}%")
