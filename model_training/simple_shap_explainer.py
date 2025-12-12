@@ -81,8 +81,8 @@ class SimpleShapExplainer:
     
     def _train_model(self):
         """Train a simple model if no model provided."""
-        csv_path = "../model_validation/dataset_117_p-all.tsv"
-        features_path = "../model_validation/LH-Model.csv"
+        csv_path = "model_validation/dataset_117_p-all.tsv"
+        features_path = "model_validation/LH-Model.csv"
                 
         df = pd.read_csv(csv_path, delimiter="\t")
         selected_features = pd.read_csv(features_path, header=None)
@@ -108,7 +108,7 @@ class SimpleShapExplainer:
     def _load_feature_metadata(self, metadata_path: str = None):
         """Load feature metadata from CSV file."""
         if metadata_path is None:
-            metadata_path = "../model_validation/PPM Explains - Sheet1.csv"
+            metadata_path = "model_validation/PPM Explains - Sheet1.csv"
         
         self.feature_metadata = {}
         if Path(metadata_path).exists():
@@ -650,17 +650,39 @@ class SimpleShapExplainer:
             )
             raw_data_array.append(raw_val)
         
-        raw_data_array = np.array(raw_data_array)
-        data_values = raw_data_array
+        # For force plots, use SHAP contributions as both values and data labels
+        data_values = values.copy()
         
-        # Filter to top N features if max_features is set
+        # Filter to top N features if max_features is set with aggregation
         if max_features is not None and max_features < len(values):
-            top_indices = np.argsort(np.abs(values))[-max_features:]
+            # Reserve one slot for aggregation if there are remaining features
+            top_n = max_features - 1 if max_features < len(values) else max_features
+            top_indices = np.argsort(np.abs(values))[-top_n:]
             top_indices = top_indices[np.argsort(values[top_indices])]
             
-            values = values[top_indices]
-            data_values = data_values[top_indices]
-            final_names = [final_names[i] for i in top_indices]
+            # Calculate remaining features aggregation
+            remaining_indices = np.setdiff1d(np.arange(len(values)), top_indices)
+            if len(remaining_indices) > 0:
+                remaining_sum = np.sum(values[remaining_indices])
+                remaining_count = len(remaining_indices)
+                
+                # Add aggregated remaining features:
+                # - values: SHAP contributions (bar length/color) 
+                # - data: SHAP contributions (displayed as labels)
+                aggregated_values = np.append(values[top_indices], remaining_sum)
+                aggregated_data = np.append(values[top_indices], remaining_sum)  # Use contributions as labels
+                aggregated_names = [final_names[i] for i in top_indices] + [f"{remaining_count} other features"]
+                
+                values = aggregated_values
+                data_values = aggregated_data
+                final_names = aggregated_names
+            else:
+                values = values[top_indices]
+                data_values = values[top_indices]  # Use contributions as labels
+                final_names = [final_names[i] for i in top_indices]
+        else:
+            # No filtering needed, use all features
+            pass
         
         values = np.round(values, 2)
         base_value = np.round(base_value, 2)
