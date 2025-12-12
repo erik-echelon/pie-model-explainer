@@ -3,7 +3,7 @@ notebook
 pandas
 numpy
 catboost
-scikit-learn
+scikit-learn==1.6.1
 statistics
 itables
 seaborn
