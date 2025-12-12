@@ -239,7 +239,7 @@ def explain_with_claude(
         emod_value = policy_data['EXPERIENCE_MOD_FACTOR']
     
     emod_display = f"{emod_value:.3f}" if emod_value is not None else "N/A"
-    
+
     prompt = f"""Explain this Workers Compensation insurance pricing prediction in 4-6 sentences for underwriters.
 
 Model Output:
@@ -249,31 +249,31 @@ Model Output:
 
 Policy E-Mod: {emod_display} (1.0 = average; >1.0 = worse than average claims history; <1.0 = better than average)
 
-Top Contributing Factors (driving the MODEL SCORE, not E-Mod):
+Top Contributing Factors (driving the MODEL SCORE):
 {feature_list}
 
-CRITICAL CONTEXT - READ FIRST:
-The E-Mod and Model Score are TWO COMPLETELY INDEPENDENT risk assessments:
+CRITICAL CONTEXT:
+The E-Mod and Model Score are TWO INDEPENDENT risk assessments that get MULTIPLIED together in pricing:
 
-1. E-MOD reflects ONLY the insured's past claims history compared to similar businesses. It is calculated by NCCI/rating bureaus, not by Pie. A high E-Mod means they've had more/worse claims than average.
+1. E-MOD is calculated by NCCI/rating bureaus based on the insured's claims history. It's an industry-standard factor applied before Pie's model.
 
-2. MODEL SCORE captures EVERYTHING ELSE about risk - business characteristics, class codes, territory, operations, payroll patterns, etc. It does NOT incorporate claims history at all. The model score is Pie's proprietary assessment.
+2. MODEL SCORE is Pie's proprietary assessment that captures many risk factors including:
+   - Business characteristics, class codes, territory, operations
+   - Claims-derived features (any feature starting with "CALC_" incorporates claims data in a different way than E-Mod)
+   - Other predictive signals
 
-These two scores are MULTIPLIED TOGETHER in pricing. They are not related to each other and will often point in different directions. For example:
-- A business with terrible claims history (high E-Mod) might still have favorable operational characteristics (low model score)
-- A business with great claims history (low E-Mod) might operate in a risky territory or class (high model score)
+The model score MAY include claims-related features (CALC_* features), but these are calculated differently than E-Mod and capture different aspects of claims history. So claims can influence BOTH the E-Mod AND the model score independently.
 
 Write a 4-6 sentence explanation that:
-1. States if the MODEL SCORE indicates higher/lower risk than average and by how much (the percentage shown above is ONLY from the model score)
+1. States if the MODEL SCORE indicates higher/lower risk than average and by how much
 2. Identifies the 2-3 most important factors from the list above driving the model score
-3. Briefly note the E-Mod value as separate context about their claims history
-4. If claims-related features don't appear in the top factors, note that claims history is not a concern FOR THE MODEL SCORE (it's handled separately by E-Mod)
+3. For CALC_* features, note these are claims-derived metrics that capture risk patterns beyond what E-Mod measures
+4. Briefly note the E-Mod value as separate context
 
 CRITICAL WRITING RULES:
-- The percentage difference shown ({explanation.risk_pct_change:+.1f}%) is ENTIRELY from the model score. Do not attribute any part of it to E-Mod.
-- Do NOT write sentences that combine E-Mod and model score effects (e.g., "Both contribute to the X% improvement" is WRONG)
-- Do NOT imply they "add up" or "work together" for any combined effect
-- E-Mod is mentioned ONLY as independent context, not as part of explaining the model output
+- The percentage difference shown ({explanation.risk_pct_change:+.1f}%) is ENTIRELY from the model score
+- Do NOT combine E-Mod and model score effects into a single number
+- If CALC_* features appear, acknowledge they incorporate claims data (this is different from E-Mod, not redundant with it)
 - Keep E-Mod discussion to one brief sentence, separate from the model score discussion
 
 Use conversational business language. Avoid technical jargon. Be direct and concise."""
