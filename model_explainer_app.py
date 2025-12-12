@@ -29,7 +29,7 @@ from model_training.simple_shap_explainer import SimpleShapExplainer, ShapExplan
 # Configuration
 EXPLAINER_PATH = "fresh_explainer_with_metadata.pkl"
 DATA_DICTIONARY_PATH = "feature_dictionary.csv"
-POLICIES_PATH = "/Users/erikallen/Downloads/dataset_130_all.tsv"
+POLICIES_PATH = "dataset_reduced.csv"
 
 
 class FeatureDictionary:

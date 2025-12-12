@@ -81,8 +81,8 @@ class SimpleShapExplainer:
     
     def _train_model(self):
         """Train a simple model if no model provided."""
-        csv_path = "model_validation/dataset_117_p-all.tsv"
-        features_path = "model_validation/LH-Model.csv"
+        csv_path = "../model_validation/dataset_117_p-all.tsv"
+        features_path = "../model_validation/LH-Model.csv"
                 
         df = pd.read_csv(csv_path, delimiter="\t")
         selected_features = pd.read_csv(features_path, header=None)
@@ -108,7 +108,7 @@ class SimpleShapExplainer:
     def _load_feature_metadata(self, metadata_path: str = None):
         """Load feature metadata from CSV file."""
         if metadata_path is None:
-            metadata_path = "feature_dictionary.csv"
+            metadata_path = "../model_validation/PPM Explains - Sheet1.csv"
         
         self.feature_metadata = {}
         if Path(metadata_path).exists():
@@ -383,7 +383,7 @@ class SimpleShapExplainer:
         # Generate plot if requested
         waterfall_fig = None
         if include_plot:
-            waterfall_fig = self._create_waterfall_plot(data, max_features, name_map)
+            waterfall_fig = self._create_waterfall_plot(data, max_features, name_map, raw_values, contributions)
         
         return ShapExplanation(
             prediction=prediction,
@@ -507,9 +507,11 @@ class SimpleShapExplainer:
         self, 
         data: Union[Dict, pd.Series, pd.DataFrame], 
         max_features: int = 10,
-        name_map: Dict[str, str] = None
+        name_map: Dict[str, str] = None,
+        raw_values: Dict = None,
+        contributions: List[Dict] = None
     ) -> plt.Figure:
-        """Create SHAP's native waterfall plot with display names."""
+        """Create SHAP's native waterfall plot with display names and raw values."""
         shap_values = self._prepare_shap_values(data)
         
         # Get preprocessed feature names from the pipeline
@@ -527,11 +529,55 @@ class SimpleShapExplainer:
             display_name = self._resolve_display_name(clean_name, name_map)
             final_names.append(display_name)
         
-        # Create a new Explanation object with the display names
+        # Create raw data array for the plot using the original raw values
+        raw_data_array = None
+        if raw_values and contributions:
+            # We need to reconstruct raw values for ALL preprocessed features, not just contributing ones
+            # First, convert the input data properly
+            if isinstance(data, dict):
+                input_df = pd.DataFrame([data])
+            elif isinstance(data, pd.Series):
+                input_df = pd.DataFrame([data])
+            else:
+                input_df = data.copy()
+            
+            # Ensure all required columns are present
+            for col in self.feature_names:
+                if col not in input_df.columns:
+                    input_df[col] = np.nan
+            input_df = input_df[self.feature_names]
+            input_raw_values = input_df.iloc[0].to_dict()
+            
+            # Build raw data array matching the preprocessed feature order
+            raw_data_array = []
+            for prep_name in preprocessed_names:
+                clean_name = self._clean_feature_name(prep_name)
+                
+                # Determine feature type
+                is_missing_indicator = (
+                    'missing_indicator' in prep_name.lower() or 
+                    clean_name.startswith('MISSING_')
+                )
+                is_categorical = (
+                    prep_name.startswith('cat__') or 
+                    clean_name.endswith(('_True', '_False'))
+                )
+                
+                # Get raw value for this preprocessed feature
+                raw_val = self._get_raw_value(
+                    clean_name, input_raw_values, is_missing_indicator, is_categorical
+                )
+                raw_data_array.append(raw_val)
+            
+            raw_data_array = np.array(raw_data_array)
+        
+        # Create a new Explanation object with display names and raw data
+        final_data = raw_data_array if raw_data_array is not None else shap_values[0].data
+        
         explanation = shap.Explanation(
             values=shap_values[0].values,
             base_values=shap_values[0].base_values,
-            data=shap_values[0].data,
+            data=final_data,
             feature_names=final_names
         )
         
@@ -547,7 +593,7 @@ class SimpleShapExplainer:
         name_map: Dict[str, str] = None,
         max_features: int = None
     ) -> Optional[plt.Figure]:
-        """Create SHAP force plot with display names."""
+        """Create SHAP force plot with display names and raw values."""
         shap_values = self._prepare_shap_values(data)
         
         # Get preprocessed feature names from the pipeline
@@ -566,8 +612,46 @@ class SimpleShapExplainer:
             final_names.append(display_name)
         
         values = shap_values[0].values
-        data_values = shap_values[0].data
         base_value = shap_values[0].base_values
+        
+        # Create raw data array for the force plot (same logic as waterfall plot)
+        if isinstance(data, dict):
+            input_df = pd.DataFrame([data])
+        elif isinstance(data, pd.Series):
+            input_df = pd.DataFrame([data])
+        else:
+            input_df = data.copy()
+        
+        # Ensure all required columns are present
+        for col in self.feature_names:
+            if col not in input_df.columns:
+                input_df[col] = np.nan
+        input_df = input_df[self.feature_names]
+        input_raw_values = input_df.iloc[0].to_dict()
+        
+        # Build raw data array matching the preprocessed feature order
+        raw_data_array = []
+        for prep_name in preprocessed_names:
+            clean_name = self._clean_feature_name(prep_name)
+            
+            # Determine feature type
+            is_missing_indicator = (
+                'missing_indicator' in prep_name.lower() or 
+                clean_name.startswith('MISSING_')
+            )
+            is_categorical = (
+                prep_name.startswith('cat__') or 
+                clean_name.endswith(('_True', '_False'))
+            )
+            
+            # Get raw value for this preprocessed feature
+            raw_val = self._get_raw_value(
+                clean_name, input_raw_values, is_missing_indicator, is_categorical
+            )
+            raw_data_array.append(raw_val)
+        
+        raw_data_array = np.array(raw_data_array)
+        data_values = raw_data_array
         
         # Filter to top N features if max_features is set
         if max_features is not None and max_features < len(values):

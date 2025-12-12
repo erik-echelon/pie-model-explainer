@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
-from model_training.PipelineModel import PipelineRegressor
+from PipelineModel import PipelineRegressor
 from sklearn.linear_model import ElasticNet
 from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import KBinsDiscretizer
