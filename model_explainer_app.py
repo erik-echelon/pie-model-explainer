@@ -182,7 +182,7 @@ def load_policies() -> Optional[pd.DataFrame]:
             st.error(f"Policies file not found at {POLICIES_PATH}")
             return None
             
-        df = pd.read_csv(POLICIES_PATH, delimiter="\t", low_memory=False)
+        df = pd.read_csv(POLICIES_PATH, low_memory=False)
         df = df.loc[df["EX_IS_VALEN"] == 0].reset_index(drop=True)
         df = df.loc[df['POL_BOUND_POLICY_TERM_NUMBER'].isin(["WC 63370 02", "WC PI 533242 00", "WC 122131 00"])]
         
