@@ -1,0 +1,8 @@
+TRACE_ID,SUBMISSION_ID,SCORE_TYPE_USED,TRANSFORM_INDEX,MODEL_ID,TRANSFORM_TYPE,SCORE_INPUT,SCORE_RESULT
+08dcfcfa-bebb-10da-0083-cb00018cf620,08dcfcfa-bbec-df18-8f50-ac0001e3d6b4,NLH SCORE,0,wc_pricing_no-loss-history_Vd7D_2023-05-24,None,0.9158878266380370,0.9158878266380370
+08dcfcfa-bebb-10da-0083-cb00018cf620,08dcfcfa-bbec-df18-8f50-ac0001e3d6b4,NLH SCORE,1,wc_pricing_no-loss-history_Vd7D_2023-05-24,StateScalingTransform,0.9158878266380370,0.9158878266380370
+08dcfcfa-bebb-10da-0083-cb00018cf620,08dcfcfa-bbec-df18-8f50-ac0001e3d6b4,NLH SCORE,2,wc_pricing_no-loss-history_Vd7D_2023-05-24,HazardGroupScalingTransform,0.9158878266380370,0.9616822179699389
+08dcfcfa-bebb-10da-0083-cb00018cf620,08dcfcfa-bbec-df18-8f50-ac0001e3d6b4,NLH SCORE,3,wc_pricing_no-loss-history_Vd7D_2023-05-24,NewBusinessBalancingTransform,0.9616822179699389,0.8674373606088849
+08dcfcfa-bebb-10da-0083-cb00018cf620,08dcfcfa-bbec-df18-8f50-ac0001e3d6b4,NLH SCORE,4,wc_pricing_no-loss-history_Vd7D_2023-05-24,ClassMarketTransform,0.8674373606088849,0.9732647186031689
+08dcfcfa-bebb-10da-0083-cb00018cf620,08dcfcfa-bbec-df18-8f50-ac0001e3d6b4,NLH SCORE,5,wc_pricing_no-loss-history_Vd7D_2023-05-24,NewVentureFloorTransform,0.9732647186031689,1.1000000000000000
+08dcfcfa-bebb-10da-0083-cb00018cf620,08dcfcfa-bbec-df18-8f50-ac0001e3d6b4,NLH SCORE,6,wc_pricing_no-loss-history_Vd7D_2023-05-24,EligibilityQuestionTransform,1.1000000000000000,1.1000000000000000
